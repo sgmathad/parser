@@ -11,6 +11,10 @@ This is a PERN (Postgres, Express, React, Nodejs) application to pdf files and h
 I got my inspiration to work on this project after I finished a course "ChatGPT and LangChain: The Complete Developer's Masterclass"
 from udemy.
 
+#### Live
+
+Parser Website: https://parser.mathad.dev/
+
 #### Setup:
 
 1. Clone the repository

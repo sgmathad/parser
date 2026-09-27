@@ -7,7 +7,11 @@ import {
   DeleteObjectCommandInput,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { conversationalRetrievelQA, stream } from '../utils/langchainConfig';
+import {
+  conversationalRetrievelQA,
+  guardRailChain,
+  stream,
+} from '../utils/langchainConfig';
 import {
   countUploadsbyUserId,
   deleteUploadById,
@@ -256,10 +260,32 @@ export const getConversations = catchAsync(
  */
 export const requestLLM = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    // Important to send streams to the frontend.
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader('Connection', 'keep-alive');
+
     // get query from the user.
     const { query } = req.body;
     // get id from url.
     const { id } = req.params;
+
+    // check for personal information or prompt injection.
+    const guardRailResult = (await guardRailChain.invoke({
+      question: query,
+    })) as { sensitive: boolean; promptInjection: boolean };
+
+    if (guardRailResult.sensitive || guardRailResult.promptInjection) {
+      const guardRailResponse = {
+        event: 'token',
+        token:
+          'Your request could not be processed due to security restrictions.',
+      };
+
+      res.write(JSON.stringify(guardRailResponse) + '\n');
+      res.end();
+      return;
+    }
 
     // get the conversations.
     const conversationKey = getConversationKey(id as string);
@@ -271,11 +297,6 @@ export const requestLLM = catchAsync(
       chatHistory,
       uploadId: id,
     });
-
-    // Important to send streams to the frontend.
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Transfer-Encoding', 'chunked');
-    res.setHeader('Connection', 'keep-alive');
 
     // send the running context for user to view.
     res.write(

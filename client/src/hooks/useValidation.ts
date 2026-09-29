@@ -8,7 +8,7 @@ export const useValidation = (): Validation => {
   // Domain = Can have alpha-numeric values.
   // TLD = [.com, .dev, .edu, .org, .net] allowed
   const emailRegex =
-    /^[0-9a-zA-Z]+(\.?[0-9azA-Z+_])*@[0-9a-zA-Z]+\.(com|dev|edu|org|net)$/;
+    /^[0-9a-zA-Z]+(\.?[0-9a-zA-Z+_])*@[0-9a-zA-Z]+\.(com|dev|edu|org|net)$/;
 
   // Password regex. Length should be in the range of [15, 30].
   // Password must contain atleast - one Uppercase, one LowerCase, one Number.
